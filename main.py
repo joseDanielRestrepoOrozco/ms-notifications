@@ -9,6 +9,16 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
+
+html_file_path = "plantillas/Correo_codigo.html"
+html_content = ''
+
+# Lee el contenido del archivo HTML
+with open(html_file_path, 'r') as file:
+    html_content = file.read()
+
+
+
 @app.route('/send_email', methods=['POST'])
 def send_email():
     # Obtener datos del cuerpo de la solicitud
@@ -23,10 +33,11 @@ def send_email():
     print(f"Email: {data['email']}")
     print(f"Asunto: {data['subject']}")
     print(f"Cuerpo: {data['body']}")
+    html_content_number = html_content.replace("$$$", data['body'])
     try:
-        connection_string = os.environ.get("CONNECTION_STRING")
+        connection_string =os.environ.get("ACCESS_KEY")
         client = EmailClient.from_connection_string(connection_string)
-
+        print(connection_string)
         message = {
             "senderAddress": os.environ.get("SENDER_ADDRESS"),
             "recipients":  {
@@ -34,7 +45,7 @@ def send_email():
             },
             "content": {
                 "subject": data['subject'],
-                "plainText": data['body'],
+                "html": html_content_number
             }
         }
 

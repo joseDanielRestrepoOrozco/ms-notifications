@@ -8,8 +8,10 @@ from azure.communication.email import EmailClient
 
 from flask import Flask, request, jsonify
 
-app = Flask(__name__)
+from flask_cors import CORS
 
+app = Flask(__name__)
+CORS(app)
 
 @app.route('/send_email', methods=['POST'])
 def send_email():

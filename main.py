@@ -1,6 +1,7 @@
 import os
 import random
 from dotenv import load_dotenv
+from bson import DBRef, ObjectId
 # Carga las variables de entorno desde el archivo .env
 load_dotenv()
 
@@ -10,8 +11,18 @@ from flask import Flask, request, jsonify
 
 from flask_cors import CORS
 
+from pymongo import MongoClient
+
 app = Flask(__name__)
 CORS(app)
+
+def get_database():
+ 
+   CONNECTION_STRING = "mongodb+srv://root:root@urbannavsecurity.dceqvez.mongodb.net/?retryWrites=true&w=majority"
+ 
+   client = MongoClient(CONNECTION_STRING)
+ 
+   return client['security']
 
 @app.route('/send_email', methods=['POST'])
 def send_email():
@@ -60,7 +71,34 @@ def send_email():
 
 @app.route('/change_password', methods=['POST'])
 def change_password():
-    
+    data = request.json
+
+    random_digits = ''.join(random.choices('0123456789', k=4))
+
+    databaseConnection = get_database()
+    collection_session = databaseConnection['session']
+    collection_users = databaseConnection['user'] 
+
+    user_document=collection_users.find_one({"_id": ObjectId(data["_id"])})
+    findEmail = collection_session.find_one({"user": DBRef('user', user_document["_id"])})
+
+    if findEmail:
+        collection_session.update_one(
+        {"user": DBRef('user', user_document["_id"])},
+        {"$set": {"code": random_digits}}
+    )
+    else:
+
+        newData = {
+            "user": DBRef('user', user_document["_id"]),
+            "active": False,
+            "code": random_digits,
+            "_class": "com.msurbaNavSecurity.msurbaNavSecurity.Models.Session"
+        }
+
+        collection_session.insert_one(newData)
+
+
     html_file_path = "plantillas/change_password.html"
     html_content = ''
 
@@ -68,14 +106,9 @@ def change_password():
     with open(html_file_path, 'r', encoding= 'utf8') as file:
         html_content = file.read()
 
-    # Obtener datos del cuerpo de la solicitud
-    data = request.json
-
-    # Simular el envío de un correo electrónico
     print(f"Email: {data['email']}")
 
     # Genera los 4 dígitos aleatorios para el "body"
-    random_digits = ''.join(random.choices('0123456789', k=4))
     html_content_number = html_content.replace("$$$", random_digits)
 
     try:

@@ -73,7 +73,7 @@ def send_email():
 def change_password():
     data = request.json
 
-    random_digits = ''.join(random.choices('0123456789', k=4))
+    random_digits = ''.join(random.choices('123456789', k=4))
 
     databaseConnection = get_database()
     collection_session = databaseConnection['session']
@@ -121,7 +121,7 @@ def change_password():
                 "to": [{"address": data['email']}],
             },
             "content": {
-                "subject": "UrbanNav código",
+                "subject": "Código para cambiar contraseña UrbanNav",
                 "html": html_content_number
             }
         }

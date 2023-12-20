@@ -25,38 +25,6 @@ def get_database():
  
    return client['security']
 
-
-# Configuración de la conexión a la base de datos
-db_config = {
-    'host': '127.0.0.1',
-    'user': 'prog',
-    'password': 'prog',
-    'database': 'urbannav',
-    'cursorclass': pymysql.cursors.DictCursor,  #Configura el cursor para obtener resultados como diccionarios
-}
-
-# Intenta conectar a la base de datos
-try:
-    connection = pymysql.connect(**db_config)
-
-    with connection.cursor() as cursor:
-        # Ejemplo: Obtener datos de una tabla
-        query = 'SELECT * FROM vehicles;'
-        cursor.execute(query)
-        rows = cursor.fetchall()
-
-        for row in rows:
-            print(row)
-
-except Exception as e:
-    print(f'Error de conexión: {e}')
-
-finally:
-    # Cierra la conexión al finalizar
-    if 'connection' in locals() and connection.open:
-        connection.close()
-        print('Conexión cerrada')
-
 @app.route('/send_email', methods=['POST'])
 def send_email():
     

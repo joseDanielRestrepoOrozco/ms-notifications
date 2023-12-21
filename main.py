@@ -12,6 +12,8 @@ from flask import Flask, request, jsonify
 
 from flask_cors import CORS
 
+from flask_cors import cross_origin
+
 from pymongo import MongoClient
 
 app = Flask(__name__)
@@ -157,6 +159,52 @@ def send_bill():
     print(f"Asunto: {data['subject']}")
     print(f"Cuerpo: {data['body']}")
     html_content_number = html_content.replace("###", data['body'])
+    try:
+        connection_string =os.environ.get("CONNECTION_STRING")
+        client = EmailClient.from_connection_string(connection_string)
+        print(connection_string)
+        message = {
+            "senderAddress": os.environ.get("SENDER_ADDRESS"),
+            "recipients":  {
+                "to": [{"address": data['email']}],
+            },
+            "content": {
+                "subject": data['subject'],
+                "html": html_content_number
+            }
+        }
+
+        poller = client.begin_send(message)
+        result = poller.result()
+
+    except Exception as ex:
+        print(ex)
+    return jsonify({'message': 'Email sent successfully'}), 200
+
+@app.route('/send_panic', methods=['POST'])
+@cross_origin()
+def send_panic():
+    
+    html_file_path = "plantillas/boton_panico.html"
+    html_content = ''
+
+    # Lee el contenido del archivo HTML
+    with open(html_file_path, 'r', encoding= 'utf8') as file:
+        html_content = file.read()
+
+    # Obtener datos del cuerpo de la solicitud
+    data = request.json
+
+    # Verificar si se proporcionaron todos los campos necesarios
+    if 'email' not in data or 'subject' not in data or 'body' not in data:
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    # Simular el envío de un correo electrónico (aquí puedes agregar tu lógica real de envío de correo electrónico)
+    # En este ejemplo, simplemente imprimimos la información recibida en la consola.
+    print(f"Email: {data['email']}")
+    print(f"Asunto: {data['subject']}")
+    print(f"Cuerpo: {data['body']}")
+    html_content_number = html_content.replace("$$$", data['body'])
     try:
         connection_string =os.environ.get("CONNECTION_STRING")
         client = EmailClient.from_connection_string(connection_string)
